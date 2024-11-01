@@ -1,0 +1,13 @@
+name: Sync Workflow
+
+on:
+  workflow_dispatch:  # Allows triggering via API or manually
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Sync Code
+        run: echo "Syncing code..."  # Replace with actual commands
