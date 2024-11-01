@@ -1,13 +1,21 @@
 name: Sync Workflow
 
 on:
-  workflow_dispatch:  # Allows triggering via API or manually
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Sync Code
         run: echo "Syncing code..."  # Replace with actual commands
+
+      - name: Generate Changelog
+        uses: rhysd/changelog-from-release/action@v2
+        with:
+          file: CHANGELOG.md
+          github-token: ${{ secrets.GITHUB_TOKEN }}  # This uses the built-in GITHUB_TOKEN
