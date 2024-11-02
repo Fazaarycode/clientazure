@@ -1,9 +1,0 @@
-{
-  "name": "Client Project Codespace",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
-  "workspaceFolder": "/workspaces/client-azure-repo", // Adjust if necessary
-  "postCreateCommand": "bash ./setup.sh",
-  "remoteEnv": {
-    "AZURE_DEVOPS_PAT": "w2auw2twy32jal7eqklrozahl4r5xhragaq3ugm4rniqeerflyyq"
-  }
-}
