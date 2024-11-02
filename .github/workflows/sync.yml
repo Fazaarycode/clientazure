@@ -10,10 +10,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout an empty repo
+      - name: Checkout the repository
         uses: actions/checkout@v2
         with:
-          # Use the current repository to create an empty working directory
           repository: ${{ github.repository }}
           ref: ${{ github.ref }}
 
@@ -21,15 +20,23 @@ jobs:
         env:
           AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
         run: |
-          git init
-          git remote add origin ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+          # Check if the Azure remote already exists
+          git remote get-url azure || git remote add azure ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+
+          # Configure authentication
           git config --global http.extraHeader "Authorization: Basic $(echo -n :$AZURE_DEVOPS_TOKEN | base64)"
-          git pull origin main # Replace 'main' with the branch name in Azure DevOps if different
+
+          # Fetch and pull from Azure DevOps
+          git fetch azure
+          git checkout -B main azure/main # Replace 'main' with your Azure DevOps branch name if different
+          git pull azure main # This pulls in the latest changes
 
       - name: Add GitHub Remote
         run: |
-          # Remove the existing github remote if it exists
+          # Remove the existing GitHub remote if it exists
           git remote remove github || echo "No remote named 'github' found"
+          
+          # Add the GitHub remote
           git remote add github https://github.com/${{ github.repository }}.git
 
       - name: Push to GitHub
