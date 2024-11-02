@@ -1,41 +1,36 @@
-name: Sync Workflow
+name: Sync Azure DevOps to GitHub
 
 on:
-  workflow_dispatch:
-    inputs:
-      subscriptionId:
-        description: 'The subscription ID for the event'
-        required: true
-        default: ''
-      notificationId:
-        description: 'The notification ID for the event'
-        required: true
-        default: ''
-      eventType:
-        description: 'The type of event triggering this workflow'
-        required: true
-        default: ''
-      # Add additional inputs as needed
+  workflow_dispatch: # Manual trigger
+  schedule:
+    - cron: '0 0 * * *' # Runs daily at midnight, adjust as needed
 
 jobs:
-  sync:
+  sync_repo:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout an empty repo
         uses: actions/checkout@v2
-
-      - name: Sync Code
-        run: echo "Syncing code..."
-
-      - name: Generate Changelog
-        uses: rhysd/changelog-from-release/action@v2
         with:
-          file: CHANGELOG.md
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ''
+          ref: ''
 
-      - name: Process Incoming Data
+      - name: Pull from Azure DevOps
+        env:
+          AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
         run: |
-          echo "Subscription ID: ${{ github.event.inputs.subscriptionId }}"
-          echo "Notification ID: ${{ github.event.inputs.notificationId }}"
-          echo "Event Type: ${{ github.event.inputs.eventType }}"
+          git init
+          git remote add origin ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+          git config --global http.extraHeader "Authorization: Basic $(echo -n :$AZURE_DEVOPS_TOKEN | base64)"
+          git pull origin main # Replace 'main' with the branch name in Azure DevOps if different
+
+      - name: Add GitHub Remote
+        run: |
+          git remote add github https://github.com/${{ github.repository }}.git
+
+      - name: Push to GitHub
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git push github main --force # Overwrites main on GitHub
