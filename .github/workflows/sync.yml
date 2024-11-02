@@ -20,8 +20,10 @@ jobs:
         env:
           AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
         run: |
-          # Check if the Azure remote already exists
-          git remote get-url azure || git remote add azure ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+          # Check if the Azure remote already exists, add it if not
+          if ! git remote get-url azure; then
+            git remote add azure ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+          fi
 
           # Configure authentication
           git config --global http.extraHeader "Authorization: Basic $(echo -n :$AZURE_DEVOPS_TOKEN | base64)"
