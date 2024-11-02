@@ -11,4 +11,10 @@ fi
 
 # Navigate to the cloned repo and checkout the desired branch
 cd client-azure-repo
-git checkout -b fix/tasknumber || git checkout fix/tasknumber
+git checkout -b your-feature-branch || git checkout your-feature-branch
+
+# Go back to the root workspace
+cd ..
+
+# Create a symlink in the main workspace pointing to the Azure repo folder
+ln -s client-azure-repo azure-repo
