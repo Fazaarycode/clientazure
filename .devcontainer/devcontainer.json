@@ -2,5 +2,5 @@
   "name": "Client Project Codespace",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
   "workspaceFolder": "/workspaces/taskdevai/client-azure-repo",  // Adjust path if necessary
-  "postCreateCommand": "./.devcontainer/setup.sh"
+  "postCreateCommand": "../setup.sh"
 }
