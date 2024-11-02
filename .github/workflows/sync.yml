@@ -21,7 +21,7 @@ jobs:
           AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
         run: |
           # Check if the Azure remote already exists, add it if not
-          if ! git remote get-url azure; then
+          if ! git remote get-url azure > /dev/null 2>&1; then
             git remote add azure ${{ secrets.AZURE_DEVOPS_REPO_URL }}
           fi
 
