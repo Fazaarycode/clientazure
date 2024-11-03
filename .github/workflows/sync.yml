@@ -10,38 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout GitHub repository
-        uses: actions/checkout@v2
-        with:
-          ref: ${{ github.ref }}
-
-      - name: Add Azure DevOps Remote and Pull
+      - name: Set up Base64-encoded Auth Header
         env:
-          AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
-          AZURE_DEVOPS_REPO_URL: ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+          MY_PAT: ${{ secrets.AZURE_DEVOPS_TOKEN }}
         run: |
-          # Add Azure DevOps remote if it doesn't exist
-          git remote | grep azure || git remote add azure "$AZURE_DEVOPS_REPO_URL"
+          # Create the Base64 encoded token
+          echo "::set-output name=encoded_pat::$(echo -n \":$MY_PAT\" | base64)"
 
-          # Configure the authentication header for Azure DevOps using base64-encoded PAT
-          B64_PAT=$(echo -n ":$AZURE_DEVOPS_TOKEN" | base64)
-          git -c http.extraHeader="Authorization: Basic ${B64_PAT}" fetch azure
-
-          # Check out and update the main branch from Azure DevOps
-          git checkout -B main azure/main
-          git pull azure main
-
-      - name: Add GitHub Remote
+      - name: Clone Azure DevOps Repository
+        env:
+          AZURE_DEVOPS_URL: ${{ secrets.AZURE_DEVOPS_REPO_URL }}
+          B64_PAT: ${{ steps.set-up-auth.outputs.encoded_pat }}
         run: |
-          # Remove existing GitHub remote if it exists
-          git remote remove github || echo "No remote named 'github' found"
-          
-          # Add GitHub as a remote
-          git remote add github https://github.com/${{ github.repository }}.git
+          # Clone directly from Azure DevOps using the Base64 token
+          git -c http.extraHeader="Authorization: Basic ${B64_PAT}" clone $AZURE_DEVOPS_URL .
 
-      - name: Push to GitHub
+      - name: Push to GitHub Repository
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Push to GitHub main branch, using force if necessary
-          git push github main --force
+          # Push the cloned content to the GitHub repository
+          git push --mirror https://github.com/${{ github.repository }}.git
