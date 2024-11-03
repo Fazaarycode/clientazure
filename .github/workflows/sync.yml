@@ -10,42 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the repository
+      - name: Checkout GitHub repository
         uses: actions/checkout@v2
         with:
-          repository: ${{ github.repository }}
           ref: ${{ github.ref }}
 
-      - name: Pull from Azure DevOps
+      - name: Add Azure DevOps Remote and Pull
         env:
           AZURE_DEVOPS_TOKEN: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+          AZURE_DEVOPS_REPO_URL: ${{ secrets.AZURE_DEVOPS_REPO_URL }}
         run: |
-          # Check if the Azure remote already exists, add it if not
-          if git remote get-url azure > /dev/null 2>&1; then
-            echo "Azure remote already exists."
-          else
-            echo "Adding Azure remote..."
-            git remote add azure ${{ secrets.AZURE_DEVOPS_REPO_URL }}
-          fi
+          # Add Azure DevOps remote if it doesn't exist
+          git remote | grep azure || git remote add azure "$AZURE_DEVOPS_REPO_URL"
 
-          # Configure authentication
-          git config --global http.extraHeader "Authorization: Basic $(echo -n :$AZURE_DEVOPS_TOKEN | base64)"
+          # Configure the authentication header for Azure DevOps using base64-encoded PAT
+          B64_PAT=$(echo -n ":$AZURE_DEVOPS_TOKEN" | base64)
+          git -c http.extraHeader="Authorization: Basic ${B64_PAT}" fetch azure
 
-          # Fetch and pull from Azure DevOps
-          git fetch azure
-          git checkout -B main azure/main # Replace 'main' with your Azure DevOps branch name if different
-          git pull azure main # This pulls in the latest changes
+          # Check out and update the main branch from Azure DevOps
+          git checkout -B main azure/main
+          git pull azure main
 
       - name: Add GitHub Remote
         run: |
-          # Remove the existing GitHub remote if it exists
+          # Remove existing GitHub remote if it exists
           git remote remove github || echo "No remote named 'github' found"
           
-          # Add the GitHub remote
+          # Add GitHub as a remote
           git remote add github https://github.com/${{ github.repository }}.git
 
       - name: Push to GitHub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git push github main --force # Overwrites main on GitHub
+          # Push to GitHub main branch, using force if necessary
+          git push github main --force
