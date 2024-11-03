@@ -17,7 +17,7 @@ jobs:
         run: |
           # Encode PAT in Base64
           B64_PAT=$(echo -n ":$MY_PAT" | base64)
-          echo "Encoded PAT: $B64_PAT"  # Log the encoded PAT (caution with sensitive data)
+          echo "Encoded PAT: $B64_PAT"  # Log the encoded PAT (be cautious with sensitive data)
           echo "encoded_pat=$B64_PAT" >> $GITHUB_ENV  # Set encoded PAT as an environment variable
 
       - name: Clone Azure DevOps Repository
