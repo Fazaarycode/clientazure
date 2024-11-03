@@ -26,8 +26,10 @@ jobs:
           B64_PAT: ${{ env.encoded_pat }}  # Use the encoded PAT
         run: |
           echo "Cloning repository from: ${AZURE_DEVOPS_URL}"  # Log the Azure DevOps URL
+          CLONE_CMD="git -c http.extraHeader='Authorization: Basic ${B64_PAT}' clone '${AZURE_DEVOPS_URL}' azure_repo"
+          echo "Executing command: ${CLONE_CMD}"  # Log the clone command
           # Clone directly into a directory named 'azure_repo'
-          git -c http.extraHeader="Authorization: Basic ${B64_PAT}" clone "${AZURE_DEVOPS_URL}" azure_repo || { echo "Clone failed"; exit 1; }
+          eval $CLONE_CMD || { echo "Clone failed"; exit 1; }
           
           # Change into the cloned directory
           cd azure_repo || { echo "Failed to change directory"; exit 1; }
