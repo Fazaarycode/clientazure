@@ -22,7 +22,7 @@ jobs:
 
       - name: Clone Azure DevOps Repository
         env:
-          AZURE_DEVOPS_URL: ${{ secrets.AZURE_DEVOPS_REPO_URL }}  # Your repo URL
+          AZURE_DEVOPS_URL: 'https://dev.azure.com/taskdevai/Client%20Azure/_git/Client%20Azure/'  # Hardcoded repo URL
           B64_PAT: ${{ env.encoded_pat }}  # Use the encoded PAT
         run: |
           echo "Cloning repository from: ${AZURE_DEVOPS_URL}"  # Log the Azure DevOps URL
