@@ -11,23 +11,34 @@ jobs:
 
     steps:
       - name: Set up Base64-encoded Auth Header
+        id: set-up-auth
         env:
-          MY_PAT: ${{ secrets.AZURE_DEVOPS_TOKEN }}
+          MY_PAT: ${{ secrets.AZURE_DEVOPS_TOKEN }}  # Your PAT secret
         run: |
-          # Create the Base64 encoded token
-          echo "::set-output name=encoded_pat::$(echo -n \":$MY_PAT\" | base64)"
+          # Encode PAT in Base64
+          B64_PAT=$(echo -n ":$MY_PAT" | base64)
+          echo "Encoded PAT: $B64_PAT"  # Log the encoded PAT (caution with sensitive data)
+          echo "encoded_pat=$B64_PAT" >> $GITHUB_ENV  # Set encoded PAT as an environment variable
 
       - name: Clone Azure DevOps Repository
         env:
-          AZURE_DEVOPS_URL: ${{ secrets.AZURE_DEVOPS_REPO_URL }}
-          B64_PAT: ${{ steps.set-up-auth.outputs.encoded_pat }}
+          AZURE_DEVOPS_URL: ${{ secrets.AZURE_DEVOPS_REPO_URL }}  # Your repo URL
+          B64_PAT: ${{ env.encoded_pat }}  # Use the encoded PAT
         run: |
-          # Clone directly from Azure DevOps using the Base64 token
-          git -c http.extraHeader="Authorization: Basic ${B64_PAT}" clone $AZURE_DEVOPS_URL .
+          echo "Cloning repository from: ${AZURE_DEVOPS_URL}"  # Log the Azure DevOps URL
+          # Clone directly into a directory named 'azure_repo'
+          git -c http.extraHeader="Authorization: Basic ${B64_PAT}" clone "${AZURE_DEVOPS_URL}" azure_repo || { echo "Clone failed"; exit 1; }
+          
+          # Change into the cloned directory
+          cd azure_repo || { echo "Failed to change directory"; exit 1; }
 
       - name: Push to GitHub Repository
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Push the cloned content to the GitHub repository
-          git push --mirror https://github.com/${{ github.repository }}.git
+          echo "Adding GitHub remote..."  # Log before adding the remote
+          # Change into the azure_repo directory to push changes
+          cd azure_repo || { echo "Failed to change directory to azure_repo"; exit 1; }
+          git remote add github https://github.com/${{ github.repository }}.git
+          echo "Pushing changes to GitHub..."  # Log before pushing
+          git push github main --force || { echo "Push failed"; exit 1; }
